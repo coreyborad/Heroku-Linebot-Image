@@ -9,7 +9,7 @@
     },
     "LINE_CHANNEL_ACCESSTOKEN": {
       "description": "LINE Channel Accesstoken(Should issued first)"
-    }
-    
+    },
+    "APIURL":"https://script.google.com/macros/s/AKfycbyVZOR5_SmGakmfEbEHuqsfGHiWPHUiPcP-NRURXkNcnoeQfIcl/exec"
   }
 }

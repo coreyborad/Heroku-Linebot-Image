@@ -21,13 +21,14 @@ $app = new Slim\App([
             'AccessToken' => getenv('LINE_CHANNEL_ACCESSTOKEN'),
             'SecretToken' => getenv('LINE_CHANNEL_SECRET'),
         ],
+        'APIURL'=>getenv('APIURL')
     ],
 ]);
 
 $app->post('/', function ($request, $response, $args) use ($app) {
     $container  = $app->getContainer();
-    $imgs       = json_decode(file_get_contents("./img_result.json"), true);
-    $rand_num   = rand(0, count($imgs));
+    //$imgs       = json_decode(file_get_contents("./img_result.json"), true);
+    //$rand_num   = rand(0, count($imgs));
     $httpClient = new LINE\LINEBot\HTTPClient\CurlHTTPClient($container->settings['Line']['AccessToken']);
     $bot        = new LINE\LINEBot($httpClient, ['channelSecret' => $container->settings['Line']['SecretToken']]);
 
@@ -54,7 +55,8 @@ $app->post('/', function ($request, $response, $args) use ($app) {
         }
         //$replyText = $event->getText();
         //$textMessageBuilder = new LINE\LINEBot\MessageBuilder\TextMessageBuilder('測試');
-        $imgMessageBUilder = new LINE\LINEBot\MessageBuilder\ImageMessageBuilder($imgs[$rand_num], $imgs[$rand_num]);
+        $img = file_get_contents($container->settings['APIURL']);
+        $imgMessageBUilder = new LINE\LINEBot\MessageBuilder\ImageMessageBuilder($img, $img);
         $response          = $bot->replyMessage($event->getReplyToken(), $imgMessageBUilder);
         if ($response->isSucceeded()) {
             echo 'Succeeded!';
