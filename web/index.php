@@ -1,7 +1,4 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 require '../vendor/autoload.php';
 
 use LINE\LINEBot;
@@ -62,7 +59,6 @@ $app->post('/', function ($request, $response, $args) use ($app) {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         $img = curl_exec($ch);
         curl_close($ch);
-        $img               = file_get_contents();
         $imgMessageBUilder = new LINE\LINEBot\MessageBuilder\ImageMessageBuilder($img, $img);
         $response          = $bot->replyMessage($event->getReplyToken(), $imgMessageBUilder);
         if ($response->isSucceeded()) {
