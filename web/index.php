@@ -55,7 +55,8 @@ $app->post('/', function ($request, $response, $args) use ($app) {
         //init curl
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $container->settings['APIURL']);
-        curl_setopt($ch, CURLOPT_USERAGENT, "Google Bot");
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         $img = curl_exec($ch);
         curl_close($ch);
