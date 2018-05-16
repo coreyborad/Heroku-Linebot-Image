@@ -4,7 +4,6 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 require '../vendor/autoload.php';
 
-use Slim\App;
 use LINE\LINEBot;
 use LINE\LINEBot\Constant\HTTPHeader;
 use LINE\LINEBot\Event\MessageEvent;
@@ -13,6 +12,7 @@ use LINE\LINEBot\Exception\InvalidEventRequestException;
 use LINE\LINEBot\Exception\InvalidSignatureException;
 use LINE\LINEBot\HTTPClient\CurlHTTPClient;
 use LINE\LINEBot\MessageBuilder\ImageMessageBuilder;
+use Slim\App;
 
 $app = new Slim\App([
     'settings' => [
@@ -21,12 +21,12 @@ $app = new Slim\App([
             'AccessToken' => getenv('LINE_CHANNEL_ACCESSTOKEN'),
             'SecretToken' => getenv('LINE_CHANNEL_SECRET'),
         ],
-        'APIURL'=>getenv('APIURL')
+        'APIURL'              => getenv('APIURL'),
     ],
 ]);
 
 $app->post('/', function ($request, $response, $args) use ($app) {
-    $container  = $app->getContainer();
+    $container = $app->getContainer();
     //$imgs       = json_decode(file_get_contents("./img_result.json"), true);
     //$rand_num   = rand(0, count($imgs));
     $httpClient = new LINE\LINEBot\HTTPClient\CurlHTTPClient($container->settings['Line']['AccessToken']);
@@ -55,7 +55,14 @@ $app->post('/', function ($request, $response, $args) use ($app) {
         }
         //$replyText = $event->getText();
         //$textMessageBuilder = new LINE\LINEBot\MessageBuilder\TextMessageBuilder('測試');
-        $img = file_get_contents($container->settings['APIURL']);
+        //init curl
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $container->settings['APIURL']);
+        curl_setopt($ch, CURLOPT_USERAGENT, "Google Bot");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $img = curl_exec($ch);
+        curl_close($ch);
+        $img               = file_get_contents();
         $imgMessageBUilder = new LINE\LINEBot\MessageBuilder\ImageMessageBuilder($img, $img);
         $response          = $bot->replyMessage($event->getReplyToken(), $imgMessageBUilder);
         if ($response->isSucceeded()) {
