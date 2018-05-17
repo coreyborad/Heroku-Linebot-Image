@@ -50,21 +50,23 @@ $app->post('/', function ($request, $response, $args) use ($app) {
         if (!($event instanceof TextMessage)) {
             continue;
         }
-        //$replyText = $event->getText();
+        $replyText = $event->getText();
+        if($replyText === "5566"){
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $container->settings['APIURL']);
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            $img = curl_exec($ch);
+            curl_close($ch);
+            $imgMessageBUilder = new LINE\LINEBot\MessageBuilder\ImageMessageBuilder($img, $img);
+            $response          = $bot->replyMessage($event->getReplyToken(), $imgMessageBUilder);
+            if ($response->isSucceeded()) {
+                echo 'Succeeded!';
+            }
+        }
         //$textMessageBuilder = new LINE\LINEBot\MessageBuilder\TextMessageBuilder('測試');
         //init curl
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $container->settings['APIURL']);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        $img = curl_exec($ch);
-        curl_close($ch);
-        $imgMessageBUilder = new LINE\LINEBot\MessageBuilder\ImageMessageBuilder($img, $img);
-        $response          = $bot->replyMessage($event->getReplyToken(), $imgMessageBUilder);
-        if ($response->isSucceeded()) {
-            echo 'Succeeded!';
-        }
     }
     return $response;
 });
