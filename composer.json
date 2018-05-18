@@ -9,5 +9,10 @@
   },
   "require-dev": {
     "heroku/heroku-buildpack-php": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Core\\GetContent\\": "web/core/GetContent"
+    }
   }
 }

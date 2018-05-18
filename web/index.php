@@ -8,8 +8,8 @@ use LINE\LINEBot\Event\MessageEvent\TextMessage;
 use LINE\LINEBot\Exception\InvalidEventRequestException;
 use LINE\LINEBot\Exception\InvalidSignatureException;
 use LINE\LINEBot\HTTPClient\CurlHTTPClient;
-use LINE\LINEBot\MessageBuilder\ImageMessageBuilder;
 use Slim\App;
+use Core\GetContent;
 
 $app = new Slim\App([
     'settings' => [
@@ -24,17 +24,15 @@ $app = new Slim\App([
 
 $app->post('/', function ($request, $response, $args) use ($app) {
     $container = $app->getContainer();
-    //$imgs       = json_decode(file_get_contents("./img_result.json"), true);
-    //$rand_num   = rand(0, count($imgs));
     $httpClient = new LINE\LINEBot\HTTPClient\CurlHTTPClient($container->settings['Line']['AccessToken']);
     $bot        = new LINE\LINEBot($httpClient, ['channelSecret' => $container->settings['Line']['SecretToken']]);
+    $LadyPhotos = new Core\GetContent\LadyPhotos($container->settings['APIURL']);
 
     // Check request with signature and parse request
     $signature = $request->getHeader(HTTPHeader::LINE_SIGNATURE);
     if (empty($signature)) {
         return $request->withStatus(400, 'Bad Request');
     }
-
     try {
         $events = $bot->parseEventRequest($request->getBody(), $signature[0]);
     } catch (InvalidSignatureException $e) {
@@ -42,31 +40,40 @@ $app->post('/', function ($request, $response, $args) use ($app) {
     } catch (InvalidEventRequestException $e) {
         return $request->withStatus(400, "Invalid event request");
     }
-
     foreach ($events as $event) {
-        if (!($event instanceof MessageEvent)) {
-            continue;
+        switch (get_class($event)) {
+            //收到文字訊息
+            case 'LINE\LINEBot\Event\MessageEvent\TextMessage':
+                $replyText = strtolower(trim($event->getText()));
+                switch ($replyText) {
+                    case 'menu':
+                        //傳遞按鈕
+                        $actions = array(
+                            new \LINE\LINEBot\TemplateActionBuilder\PostbackTemplateActionBuilder("來張表特美女圖", "lady_photo")
+                        );
+                        $button = new \LINE\LINEBot\MessageBuilder\TemplateBuilder\ButtonTemplateBuilder("老司機選單","輸入menu可在叫我一次", "https://i.imgur.com/pjs79aM.jpg", $actions);
+                        $templateMessageBuilder = new LINE\LINEBot\MessageBuilder\TemplateMessageBuilder("老司機選單", $button);
+                        $response          = $bot->replyMessage($event->getReplyToken(), $templateMessageBuilder);
+                        break;
+                    case '5566':
+                        $img = $LadyPhotos->_getPhoto();
+                        $imgMessageBUilder = new LINE\LINEBot\MessageBuilder\ImageMessageBuilder($img, $img);
+                        $response          = $bot->replyMessage($event->getReplyToken(), $imgMessageBUilder);
+                        break;
+                }
+                break;
+            //收到Postback
+            case 'LINE\LINEBot\Event\PostbackEvent':
+                $postback = $event->getPostbackData();
+                switch ($postback) {
+                    case 'lady_photo':
+                        $img = $LadyPhotos->_getPhoto();
+                        $imgMessageBUilder = new LINE\LINEBot\MessageBuilder\ImageMessageBuilder($img, $img);
+                        $response          = $bot->replyMessage($event->getReplyToken(), $imgMessageBUilder);
+                        break;
+                }
+                break;
         }
-        if (!($event instanceof TextMessage)) {
-            continue;
-        }
-        $replyText = $event->getText();
-        if($replyText === "5566"){
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $container->settings['APIURL']);
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            $img = curl_exec($ch);
-            curl_close($ch);
-            $imgMessageBUilder = new LINE\LINEBot\MessageBuilder\ImageMessageBuilder($img, $img);
-            $response          = $bot->replyMessage($event->getReplyToken(), $imgMessageBUilder);
-            if ($response->isSucceeded()) {
-                echo 'Succeeded!';
-            }
-        }
-        //$textMessageBuilder = new LINE\LINEBot\MessageBuilder\TextMessageBuilder('測試');
-        //init curl
     }
     return $response;
 });
