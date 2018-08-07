@@ -16,7 +16,8 @@ $app = new Slim\App([
             'AccessToken' => getenv('LINE_CHANNEL_ACCESSTOKEN'),
             'SecretToken' => getenv('LINE_CHANNEL_SECRET'),
         ],
-        'APIURL'              => getenv('APIURL'),
+        'LADY_APIURL'              => getenv('LADY_APIURL'),
+        'UCAR_APIURL'              => getenv('UCAR_APIURL'),
     ],
 ]);
 
@@ -24,7 +25,8 @@ $app->post('/', function ($request, $response, $args) use ($app) {
     $container  = $app->getContainer();
     $httpClient = new LINE\LINEBot\HTTPClient\CurlHTTPClient($container->settings['Line']['AccessToken']);
     $bot        = new LINE\LINEBot($httpClient, ['channelSecret' => $container->settings['Line']['SecretToken']]);
-    $LadyPhotos = new Core\GetContent\LadyPhotos($container->settings['APIURL']);
+    $LadyPhotos = new Core\GetContent\LadyPhotos($container->settings['LADY_APIURL']);
+    $UCarPhotos = new Core\GetContent\UCarContent($container->settings['UCAR_APIURL']);
 
     // Check request with signature and parse request
     $signature = $request->getHeader(HTTPHeader::LINE_SIGNATURE);
@@ -63,6 +65,11 @@ $app->post('/', function ($request, $response, $args) use ($app) {
                     case '5566':
                         $img               = $LadyPhotos->_getPhoto();
                         $imgMessageBUilder = new LINE\LINEBot\MessageBuilder\ImageMessageBuilder($img, $img);
+                        $response          = $bot->replyMessage($event->getReplyToken(), $imgMessageBUilder);
+                        break;
+                    case '7788':
+                        $img               = $UCarPhotos->_getPhoto();
+                        $imgMessageBUilder = new LINE\LINEBot\MessageBuilder\ImageMessageBuilder($img["img_url"], $img["img_url"]);
                         $response          = $bot->replyMessage($event->getReplyToken(), $imgMessageBUilder);
                         break;
                 }
